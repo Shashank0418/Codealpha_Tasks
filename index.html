@@ -1,0 +1,1628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProjectFlow - Collaborative Project Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .drag-over {
+            background-color: #e0f2fe;
+            border: 2px dashed #0284c7;
+        }
+        .task-card {
+            transition: all 0.2s ease;
+        }
+        .task-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .priority-high { border-left: 4px solid #ef4444; }
+        .priority-medium { border-left: 4px solid #f59e0b; }
+        .priority-low { border-left: 4px solid #10b981; }
+        .modal-backdrop {
+            backdrop-filter: blur(4px);
+        }
+        .notification {
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .pulse-dot {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <!-- Login Screen -->
+    <div id="loginScreen" class="min-h-screen flex items-center justify-center">
+        <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center mx-auto mb-4">
+                    <span class="text-white font-bold text-xl">PF</span>
+                </div>
+                <h1 class="text-2xl font-bold text-gray-900">Welcome to ProjectFlow</h1>
+                <p class="text-gray-600 mt-2">Sign in to manage your projects</p>
+            </div>
+            
+            <form id="loginForm" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <input type="email" id="loginEmail" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter your email" required>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                    <input type="password" id="loginPassword" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter your password" required>
+                </div>
+                
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition-colors">
+                    Sign In
+                </button>
+            </form>
+            
+            <div class="mt-6 text-center">
+                <p class="text-sm text-gray-600">Don't have an account? 
+                    <button id="showRegister" class="text-blue-600 hover:text-blue-700 font-medium">Sign up</button>
+                </p>
+            </div>
+            
+            <div class="mt-6 p-4 bg-gray-50 rounded-lg">
+                <p class="text-xs text-gray-600 mb-2">Demo Accounts:</p>
+                <div class="space-y-1 text-xs">
+                    <div>📧 shashank@projectflow.com | 🔑 password123</div>
+                    <div>📧 priya.reddy@projectflow.com | 🔑 password123</div>
+                    <div>📧 arjun.rao@projectflow.com | 🔑 password123</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Register Screen -->
+    <div id="registerScreen" class="min-h-screen flex items-center justify-center hidden">
+        <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center mx-auto mb-4">
+                    <span class="text-white font-bold text-xl">PF</span>
+                </div>
+                <h1 class="text-2xl font-bold text-gray-900">Create Account</h1>
+                <p class="text-gray-600 mt-2">Join ProjectFlow today</p>
+            </div>
+            
+            <form id="registerForm" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                    <input type="text" id="registerName" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter your full name" required>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <input type="email" id="registerEmail" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter your email" required>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                    <input type="password" id="registerPassword" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Create a password" required>
+                </div>
+                
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition-colors">
+                    Create Account
+                </button>
+            </form>
+            
+            <div class="mt-6 text-center">
+                <p class="text-sm text-gray-600">Already have an account? 
+                    <button id="showLogin" class="text-blue-600 hover:text-blue-700 font-medium">Sign in</button>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="mainApp" class="hidden">
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-16">
+                    <div class="flex items-center space-x-4">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
+                                <span class="text-white font-bold text-sm">PF</span>
+                            </div>
+                            <h1 class="text-xl font-bold text-gray-900">ProjectFlow</h1>
+                        </div>
+                        <div class="hidden md:flex items-center space-x-2">
+                            <select id="projectSelect" class="border border-gray-300 rounded-lg px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="">Select Project</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <!-- Real-time status indicator -->
+                        <div class="flex items-center space-x-2">
+                            <div class="w-2 h-2 bg-green-500 rounded-full pulse-dot"></div>
+                            <span class="text-xs text-gray-600">Live</span>
+                        </div>
+                        
+                        <!-- Notifications -->
+                        <div class="relative">
+                            <button id="notificationBtn" class="relative p-2 text-gray-600 hover:text-gray-900 rounded-lg">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM10.5 3.5a6 6 0 0 1 6 6v2l1.5 3h-15l1.5-3v-2a6 6 0 0 1 6-6z"></path>
+                                </svg>
+                                <span id="notificationBadge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center hidden">0</span>
+                            </button>
+                        </div>
+                        
+                        <button id="createProjectBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                            + New Project
+                        </button>
+                        
+                        <div class="flex items-center space-x-2">
+                            <div class="flex -space-x-2" id="teamAvatars">
+                                <!-- Team avatars will be populated here -->
+                            </div>
+                            <button id="inviteBtn" class="text-gray-600 hover:text-gray-900 p-1 rounded">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <!-- User Menu -->
+                        <div class="relative">
+                            <button id="userMenuBtn" class="flex items-center space-x-2 text-gray-700 hover:text-gray-900">
+                                <img id="userAvatar" class="w-8 h-8 rounded-full" src="" alt="User">
+                                <span id="userName" class="text-sm font-medium"></span>
+                            </button>
+                            <div id="userMenu" class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border hidden z-50">
+                                <div class="py-1">
+                                    <button id="profileBtn" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</button>
+                                    <button id="settingsBtn" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</button>
+                                    <hr class="my-1">
+                                    <button id="logoutBtn" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Sign Out</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Project Dashboard -->
+        <div id="projectDashboard" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="text-center py-12">
+                <div class="w-16 h-16 bg-gray-100 rounded-xl flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                    </svg>
+                </div>
+                <h2 class="text-xl font-semibold text-gray-900 mb-2">Welcome to ProjectFlow</h2>
+                <p class="text-gray-600 mb-6">Create your first project or select an existing one to get started</p>
+                <button id="createFirstProject" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                    Create Your First Project
+                </button>
+            </div>
+        </div>
+
+        <!-- Project Board -->
+        <main id="projectBoard" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 hidden">
+            <!-- Project Info -->
+            <div class="mb-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 id="projectTitle" class="text-2xl font-bold text-gray-900"></h2>
+                        <p id="projectDescription" class="text-gray-600 mt-1"></p>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <div class="text-sm text-gray-500">
+                            <span class="font-medium">Due:</span> <span id="projectDueDate"></span>
+                        </div>
+                        <div class="flex items-center space-x-1">
+                            <div id="projectStatus" class="w-3 h-3 bg-green-500 rounded-full"></div>
+                            <span id="projectStatusText" class="text-sm text-gray-600">On Track</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Kanban Board -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="kanbanBoard">
+                <!-- Columns will be populated here -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Create Project Modal -->
+    <div id="createProjectModal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-xl shadow-xl max-w-lg w-full">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-bold text-gray-900">Create New Project</h3>
+                        <button id="closeCreateProjectModal" class="text-gray-400 hover:text-gray-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <form id="createProjectForm" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Project Name</label>
+                            <input type="text" id="newProjectName" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter project name..." required>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                            <textarea id="newProjectDescription" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent" rows="3" placeholder="Project description..."></textarea>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Due Date</label>
+                                <input type="date" id="newProjectDueDate" class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+                                <select id="newProjectPriority" class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <option value="low">Low</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="high">High</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Team Members</label>
+                            <div id="teamMembersList" class="space-y-2">
+                                <!-- Team members checkboxes will be populated here -->
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-end space-x-3 pt-4 border-t">
+                            <button type="button" id="cancelCreateProject" class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                                Cancel
+                            </button>
+                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                                Create Project
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Task Detail Modal -->
+    <div id="taskModal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-screen overflow-y-auto">
+                <div class="p-6">
+                    <div class="flex items-start justify-between mb-4">
+                        <h3 id="modalTaskTitle" class="text-xl font-bold text-gray-900">Task Details</h3>
+                        <button id="closeTaskModal" class="text-gray-400 hover:text-gray-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                            <textarea id="taskDescription" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent" rows="3" placeholder="Add task description..."></textarea>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Assignee</label>
+                                <select id="taskAssignee" class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <!-- Options will be populated dynamically -->
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+                                <select id="taskPriority" class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <option value="low">Low</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="high">High</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Due Date</label>
+                            <input type="date" id="taskDueDate" class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                        
+                        <!-- Comments Section -->
+                        <div class="border-t pt-4">
+                            <h4 class="font-medium text-gray-900 mb-3">Comments & Activity</h4>
+                            <div id="commentsList" class="space-y-3 mb-4 max-h-64 overflow-y-auto">
+                                <!-- Comments will be populated here -->
+                            </div>
+                            <div class="flex space-x-3">
+                                <img id="currentUserAvatar" class="w-8 h-8 rounded-full" src="" alt="You">
+                                <div class="flex-1">
+                                    <textarea id="newComment" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent" rows="2" placeholder="Add a comment..."></textarea>
+                                    <button id="addComment" class="mt-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                                        Add Comment
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-3 mt-6 pt-4 border-t">
+                        <button id="deleteTask" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                            Delete Task
+                        </button>
+                        <button id="saveTask" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                            Save Changes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Task Modal -->
+    <div id="newTaskModal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-xl shadow-xl max-w-lg w-full">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-bold text-gray-900">Create New Task</h3>
+                        <button id="closeNewTaskModal" class="text-gray-400 hover:text-gray-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <form id="newTaskForm" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Task Title</label>
+                            <input type="text" id="newTaskTitle" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter task title..." required>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                            <textarea id="newTaskDescription" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent" rows="3" placeholder="Add task description..."></textarea>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Assignee</label>
+                                <select id="newTaskAssignee" class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <!-- Options will be populated dynamically -->
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+                                <select id="newTaskPriority" class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <option value="low">Low</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="high">High</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Due Date</label>
+                            <input type="date" id="newTaskDueDate" class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                        
+                        <div class="flex justify-end space-x-3 pt-4 border-t">
+                            <button type="button" id="cancelNewTask" class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                                Cancel
+                            </button>
+                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                                Create Task
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications Panel -->
+    <div id="notificationsPanel" class="fixed top-16 right-4 w-80 bg-white rounded-lg shadow-xl border hidden z-50 max-h-96 overflow-y-auto">
+        <div class="p-4 border-b">
+            <h3 class="font-semibold text-gray-900">Notifications</h3>
+        </div>
+        <div id="notificationsList" class="divide-y">
+            <!-- Notifications will be populated here -->
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="fixed top-4 right-4 space-y-2 z-50"></div>
+
+    <script>
+        // Global state management
+        class ProjectFlowApp {
+            constructor() {
+                this.currentUser = null;
+                this.currentProject = null;
+                this.projects = [];
+                this.users = [];
+                this.tasks = [];
+                this.comments = [];
+                this.notifications = [];
+                this.draggedTask = null;
+                this.taskCounter = 1;
+                this.projectCounter = 1;
+                this.commentCounter = 1;
+                this.notificationCounter = 1;
+                
+                this.initializeData();
+                this.initializeEventListeners();
+                this.simulateRealTimeUpdates();
+            }
+
+            initializeData() {
+                // Initialize demo users
+                this.users = [
+                    {
+                        id: 1,
+                        name: 'Shashank',
+                        email: 'shashank@projectflow.com',
+                        password: 'password123',
+                        avatar: this.generateAvatar('SH', '#4f46e5'),
+                        role: 'admin'
+                    },
+                    {
+                        id: 2,
+                        name: 'Priya Reddy',
+                        email: 'priya.reddy@projectflow.com',
+                        password: 'password123',
+                        avatar: this.generateAvatar('PR', '#06b6d4'),
+                        role: 'member'
+                    },
+                    {
+                        id: 3,
+                        name: 'Arjun Rao',
+                        email: 'arjun.rao@projectflow.com',
+                        password: 'password123',
+                        avatar: this.generateAvatar('AR', '#10b981'),
+                        role: 'member'
+                    },
+                    {
+                        id: 4,
+                        name: 'Kavya Nair',
+                        email: 'kavya.nair@projectflow.com',
+                        password: 'password123',
+                        avatar: this.generateAvatar('KN', '#f59e0b'),
+                        role: 'member'
+                    },
+                    {
+                        id: 5,
+                        name: 'Ravi Kumar',
+                        email: 'ravi.kumar@projectflow.com',
+                        password: 'password123',
+                        avatar: this.generateAvatar('RK', '#ef4444'),
+                        role: 'member'
+                    }
+                ];
+
+                // Initialize demo projects
+                this.projects = [
+                    {
+                        id: 1,
+                        name: 'Website Redesign',
+                        description: 'Complete overhaul of company website with modern design',
+                        dueDate: '2024-12-15',
+                        priority: 'high',
+                        status: 'active',
+                        members: [1, 2, 3],
+                        createdBy: 1,
+                        createdAt: new Date('2024-11-01')
+                    },
+                    {
+                        id: 2,
+                        name: 'Mobile App Development',
+                        description: 'Native mobile app for iOS and Android platforms',
+                        dueDate: '2024-12-30',
+                        priority: 'medium',
+                        status: 'active',
+                        members: [1, 3, 4],
+                        createdBy: 1,
+                        createdAt: new Date('2024-11-05')
+                    },
+                    {
+                        id: 3,
+                        name: 'E-commerce Platform',
+                        description: 'Full-featured online shopping platform with payment integration',
+                        dueDate: '2025-01-20',
+                        priority: 'high',
+                        status: 'active',
+                        members: [1, 2, 3, 4, 5],
+                        createdBy: 1,
+                        createdAt: new Date('2024-11-10')
+                    }
+                ];
+
+                // Initialize demo tasks
+                this.tasks = [
+                    // Website Redesign Project Tasks
+                    {
+                        id: 1,
+                        title: 'Design Homepage Mockup',
+                        description: 'Create initial design concepts for the new homepage layout',
+                        projectId: 1,
+                        assigneeId: 1,
+                        priority: 'high',
+                        status: 'todo',
+                        dueDate: '2024-12-10',
+                        createdBy: 1,
+                        createdAt: new Date('2024-11-02')
+                    },
+                    {
+                        id: 2,
+                        title: 'Content Strategy',
+                        description: 'Plan content structure and messaging for all pages',
+                        projectId: 1,
+                        assigneeId: 2,
+                        priority: 'medium',
+                        status: 'todo',
+                        dueDate: '2024-12-12',
+                        createdBy: 1,
+                        createdAt: new Date('2024-11-03')
+                    },
+                    {
+                        id: 3,
+                        title: 'Frontend Development',
+                        description: 'Implement responsive design with React components',
+                        projectId: 1,
+                        assigneeId: 3,
+                        priority: 'high',
+                        status: 'progress',
+                        dueDate: '2024-12-14',
+                        createdBy: 1,
+                        createdAt: new Date('2024-11-04'),
+                        progress: 65
+                    },
+                    {
+                        id: 4,
+                        title: 'Logo Design Options',
+                        description: 'Review and approve final logo variations',
+                        projectId: 1,
+                        assigneeId: 1,
+                        priority: 'low',
+                        status: 'review',
+                        dueDate: '2024-12-08',
+                        createdBy: 2,
+                        createdAt: new Date('2024-11-01')
+                    },
+                    {
+                        id: 5,
+                        title: 'Research & Analysis',
+                        description: 'Competitor analysis and user research completed',
+                        projectId: 1,
+                        assigneeId: 2,
+                        priority: 'medium',
+                        status: 'done',
+                        dueDate: '2024-12-05',
+                        createdBy: 1,
+                        createdAt: new Date('2024-10-28'),
+                        completedAt: new Date('2024-11-05')
+                    },
+                    {
+                        id: 6,
+                        title: 'SEO Optimization',
+                        description: 'Optimize website for search engines and performance',
+                        projectId: 1,
+                        assigneeId: 3,
+                        priority: 'medium',
+                        status: 'progress',
+                        dueDate: '2024-12-16',
+                        createdBy: 1,
+                        createdAt: new Date('2024-11-06'),
+                        progress: 30
+                    },
+                    
+                    // Mobile App Development Project Tasks
+                    {
+                        id: 7,
+                        title: 'User Authentication System',
+                        description: 'Implement secure login and registration functionality',
+                        projectId: 2,
+                        assigneeId: 3,
+                        priority: 'high',
+                        status: 'todo',
+                        dueDate: '2024-12-18',
+                        createdBy: 1,
+                        createdAt: new Date('2024-11-06')
+                    },
+                    {
+                        id: 8,
+                        title: 'API Integration',
+                        description: 'Connect mobile app with backend services',
+                        projectId: 2,
+                        assigneeId: 4,
+                        priority: 'high',
+                        status: 'progress',
+                        dueDate: '2024-12-22',
+                        createdBy: 1,
+                        createdAt: new Date('2024-11-07'),
+                        progress: 45
+                    },
+                    {
+                        id: 9,
+                        title: 'UI/UX Design Review',
+                        description: 'Review and finalize mobile app interface designs',
+                        projectId: 2,
+                        assigneeId: 1,
+                        priority: 'medium',
+                        status: 'review',
+                        dueDate: '2024-12-15',
+                        createdBy: 3,
+                        createdAt: new Date('2024-11-05')
+                    },
+                    {
+                        id: 10,
+                        title: 'App Store Guidelines',
+                        description: 'Ensure compliance with iOS and Android store requirements',
+                        projectId: 2,
+                        assigneeId: 4,
+                        priority: 'medium',
+                        status: 'done',
+                        dueDate: '2024-12-10',
+                        createdBy: 1,
+                        createdAt: new Date('2024-11-01'),
+                        completedAt: new Date('2024-11-08')
+                    },
+                    
+                    // E-commerce Platform Project Tasks
+                    {
+                        id: 11,
+                        title: 'Database Schema Design',
+                        description: 'Design database structure for products, users, and orders',
+                        projectId: 3,
+                        assigneeId: 3,
+                        priority: 'high',
+                        status: 'todo',
+                        dueDate: '2024-12-20',
+                        createdBy: 1,
+                        createdAt: new Date('2024-11-11')
+                    },
+                    {
+                        id: 12,
+                        title: 'Payment Gateway Integration',
+                        description: 'Integrate Stripe and PayPal payment systems',
+                        projectId: 3,
+                        assigneeId: 4,
+                        priority: 'high',
+                        status: 'todo',
+                        dueDate: '2024-12-25',
+                        createdBy: 1,
+                        createdAt: new Date('2024-11-12')
+                    },
+                    {
+                        id: 13,
+                        title: 'Product Catalog System',
+                        description: 'Build product listing and search functionality',
+                        projectId: 3,
+                        assigneeId: 2,
+                        priority: 'high',
+                        status: 'progress',
+                        dueDate: '2024-12-28',
+                        createdBy: 1,
+                        createdAt: new Date('2024-11-13'),
+                        progress: 25
+                    },
+                    {
+                        id: 14,
+                        title: 'Shopping Cart Features',
+                        description: 'Implement add to cart, wishlist, and checkout flow',
+                        projectId: 3,
+                        assigneeId: 5,
+                        priority: 'medium',
+                        status: 'progress',
+                        dueDate: '2024-12-30',
+                        createdBy: 1,
+                        createdAt: new Date('2024-11-14'),
+                        progress: 40
+                    },
+                    {
+                        id: 15,
+                        title: 'Admin Dashboard',
+                        description: 'Create admin panel for managing products and orders',
+                        projectId: 3,
+                        assigneeId: 1,
+                        priority: 'medium',
+                        status: 'review',
+                        dueDate: '2025-01-05',
+                        createdBy: 2,
+                        createdAt: new Date('2024-11-10')
+                    },
+                    {
+                        id: 16,
+                        title: 'Security Audit',
+                        description: 'Comprehensive security review and penetration testing',
+                        projectId: 3,
+                        assigneeId: 3,
+                        priority: 'high',
+                        status: 'review',
+                        dueDate: '2025-01-10',
+                        createdBy: 1,
+                        createdAt: new Date('2024-11-09')
+                    },
+                    {
+                        id: 17,
+                        title: 'Market Research',
+                        description: 'Analyze competitor pricing and feature comparison',
+                        projectId: 3,
+                        assigneeId: 2,
+                        priority: 'low',
+                        status: 'done',
+                        dueDate: '2024-12-01',
+                        createdBy: 1,
+                        createdAt: new Date('2024-10-25'),
+                        completedAt: new Date('2024-11-15')
+                    }
+                ];
+
+                // Initialize demo comments
+                this.comments = [
+                    {
+                        id: 1,
+                        taskId: 1,
+                        userId: 1,
+                        content: "I've started working on the initial wireframes. Should have the first draft ready by tomorrow.",
+                        createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000) // 2 hours ago
+                    },
+                    {
+                        id: 2,
+                        taskId: 3,
+                        userId: 3,
+                        content: "Making good progress on the React components. The responsive design is looking great!",
+                        createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000) // 4 hours ago
+                    },
+                    {
+                        id: 3,
+                        taskId: 4,
+                        userId: 2,
+                        content: "The logo variations look amazing! I particularly like option 2 and 3. Can we get feedback from the client?",
+                        createdAt: new Date(Date.now() - 6 * 60 * 60 * 1000) // 6 hours ago
+                    },
+                    {
+                        id: 4,
+                        taskId: 8,
+                        userId: 4,
+                        content: "API endpoints are working well. Just need to handle error cases and add proper validation.",
+                        createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000) // 3 hours ago
+                    },
+                    {
+                        id: 5,
+                        taskId: 9,
+                        userId: 1,
+                        content: "The UI flows are intuitive. Minor suggestion: can we make the buttons slightly larger for better touch targets?",
+                        createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000) // 5 hours ago
+                    },
+                    {
+                        id: 6,
+                        taskId: 13,
+                        userId: 2,
+                        content: "Product search is working well. Added filters for category, price range, and ratings.",
+                        createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000) // 1 hour ago
+                    },
+                    {
+                        id: 7,
+                        taskId: 15,
+                        userId: 1,
+                        content: "Admin dashboard is ready for review. All CRUD operations are implemented with proper permissions.",
+                        createdAt: new Date(Date.now() - 8 * 60 * 60 * 1000) // 8 hours ago
+                    },
+                    {
+                        id: 8,
+                        taskId: 16,
+                        userId: 3,
+                        content: "Security audit completed. Found a few minor issues that have been documented. Overall security posture is strong.",
+                        createdAt: new Date(Date.now() - 12 * 60 * 60 * 1000) // 12 hours ago
+                    }
+                ];
+
+                this.taskCounter = Math.max(...this.tasks.map(t => t.id)) + 1;
+                this.projectCounter = Math.max(...this.projects.map(p => p.id)) + 1;
+                this.commentCounter = Math.max(...this.comments.map(c => c.id)) + 1;
+            }
+
+            generateAvatar(initials, color) {
+                return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='${encodeURIComponent(color)}'/%3E%3Ctext x='16' y='20' text-anchor='middle' fill='white' font-family='Arial' font-size='12' font-weight='bold'%3E${initials}%3C/text%3E%3C/svg%3E`;
+            }
+
+            initializeEventListeners() {
+                // Authentication
+                document.getElementById('loginForm').addEventListener('submit', (e) => this.handleLogin(e));
+                document.getElementById('registerForm').addEventListener('submit', (e) => this.handleRegister(e));
+                document.getElementById('showRegister').addEventListener('click', () => this.showRegisterScreen());
+                document.getElementById('showLogin').addEventListener('click', () => this.showLoginScreen());
+                document.getElementById('logoutBtn').addEventListener('click', () => this.handleLogout());
+
+                // Project management
+                document.getElementById('createProjectBtn').addEventListener('click', () => this.showCreateProjectModal());
+                document.getElementById('createFirstProject').addEventListener('click', () => this.showCreateProjectModal());
+                document.getElementById('createProjectForm').addEventListener('submit', (e) => this.handleCreateProject(e));
+                document.getElementById('projectSelect').addEventListener('change', (e) => this.switchProject(e.target.value));
+
+                // Task management
+                document.getElementById('newTaskForm').addEventListener('submit', (e) => this.handleCreateTask(e));
+                document.getElementById('addComment').addEventListener('click', () => this.addComment());
+                document.getElementById('saveTask').addEventListener('click', () => this.saveTaskChanges());
+                document.getElementById('deleteTask').addEventListener('click', () => this.deleteTask());
+
+                // Modal controls
+                this.setupModalControls();
+
+                // User menu
+                document.getElementById('userMenuBtn').addEventListener('click', () => this.toggleUserMenu());
+                document.getElementById('notificationBtn').addEventListener('click', () => this.toggleNotifications());
+
+                // Close dropdowns when clicking outside
+                document.addEventListener('click', (e) => this.handleOutsideClick(e));
+            }
+
+            setupModalControls() {
+                const modals = [
+                    { modal: 'createProjectModal', close: 'closeCreateProjectModal', cancel: 'cancelCreateProject' },
+                    { modal: 'taskModal', close: 'closeTaskModal' },
+                    { modal: 'newTaskModal', close: 'closeNewTaskModal', cancel: 'cancelNewTask' }
+                ];
+
+                modals.forEach(({ modal, close, cancel }) => {
+                    const modalEl = document.getElementById(modal);
+                    const closeBtn = document.getElementById(close);
+                    const cancelBtn = cancel ? document.getElementById(cancel) : null;
+
+                    closeBtn?.addEventListener('click', () => modalEl.classList.add('hidden'));
+                    cancelBtn?.addEventListener('click', () => modalEl.classList.add('hidden'));
+                    modalEl?.addEventListener('click', (e) => {
+                        if (e.target === modalEl) modalEl.classList.add('hidden');
+                    });
+                });
+            }
+
+            // Authentication methods
+            handleLogin(e) {
+                e.preventDefault();
+                const email = document.getElementById('loginEmail').value;
+                const password = document.getElementById('loginPassword').value;
+
+                const user = this.users.find(u => u.email === email && u.password === password);
+                if (user) {
+                    this.currentUser = user;
+                    this.showMainApp();
+                    this.showToast('Welcome back, ' + user.name + '!', 'success');
+                } else {
+                    this.showToast('Invalid email or password', 'error');
+                }
+            }
+
+            handleRegister(e) {
+                e.preventDefault();
+                const name = document.getElementById('registerName').value;
+                const email = document.getElementById('registerEmail').value;
+                const password = document.getElementById('registerPassword').value;
+
+                if (this.users.find(u => u.email === email)) {
+                    this.showToast('Email already exists', 'error');
+                    return;
+                }
+
+                const newUser = {
+                    id: Math.max(...this.users.map(u => u.id)) + 1,
+                    name,
+                    email,
+                    password,
+                    avatar: this.generateAvatar(name.split(' ').map(n => n[0]).join('').toUpperCase(), '#6366f1'),
+                    role: 'member'
+                };
+
+                this.users.push(newUser);
+                this.currentUser = newUser;
+                this.showMainApp();
+                this.showToast('Account created successfully!', 'success');
+            }
+
+            handleLogout() {
+                this.currentUser = null;
+                this.currentProject = null;
+                this.showLoginScreen();
+                this.showToast('Signed out successfully', 'info');
+            }
+
+            showLoginScreen() {
+                document.getElementById('loginScreen').classList.remove('hidden');
+                document.getElementById('registerScreen').classList.add('hidden');
+                document.getElementById('mainApp').classList.add('hidden');
+            }
+
+            showRegisterScreen() {
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('registerScreen').classList.remove('hidden');
+                document.getElementById('mainApp').classList.add('hidden');
+            }
+
+            showMainApp() {
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('registerScreen').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                
+                this.updateUserInterface();
+                this.populateProjects();
+                this.updateTeamAvatars();
+            }
+
+            updateUserInterface() {
+                document.getElementById('userName').textContent = this.currentUser.name;
+                document.getElementById('userAvatar').src = this.currentUser.avatar;
+                document.getElementById('currentUserAvatar').src = this.currentUser.avatar;
+            }
+
+            // Project management methods
+            populateProjects() {
+                const projectSelect = document.getElementById('projectSelect');
+                projectSelect.innerHTML = '<option value="">Select Project</option>';
+                
+                const userProjects = this.projects.filter(p => 
+                    p.members.includes(this.currentUser.id) || p.createdBy === this.currentUser.id
+                );
+
+                userProjects.forEach(project => {
+                    const option = document.createElement('option');
+                    option.value = project.id;
+                    option.textContent = project.name;
+                    projectSelect.appendChild(option);
+                });
+
+                if (userProjects.length === 0) {
+                    this.showProjectDashboard();
+                }
+            }
+
+            showCreateProjectModal() {
+                document.getElementById('createProjectModal').classList.remove('hidden');
+                this.populateTeamMembersList();
+            }
+
+            populateTeamMembersList() {
+                const container = document.getElementById('teamMembersList');
+                container.innerHTML = '';
+
+                this.users.filter(u => u.id !== this.currentUser.id).forEach(user => {
+                    const div = document.createElement('div');
+                    div.className = 'flex items-center space-x-2';
+                    div.innerHTML = `
+                        <input type="checkbox" id="member-${user.id}" value="${user.id}" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        <img src="${user.avatar}" alt="${user.name}" class="w-6 h-6 rounded-full">
+                        <label for="member-${user.id}" class="text-sm text-gray-700">${user.name}</label>
+                    `;
+                    container.appendChild(div);
+                });
+            }
+
+            handleCreateProject(e) {
+                e.preventDefault();
+                const name = document.getElementById('newProjectName').value;
+                const description = document.getElementById('newProjectDescription').value;
+                const dueDate = document.getElementById('newProjectDueDate').value;
+                const priority = document.getElementById('newProjectPriority').value;
+
+                const selectedMembers = Array.from(document.querySelectorAll('#teamMembersList input:checked'))
+                    .map(cb => parseInt(cb.value));
+                selectedMembers.push(this.currentUser.id); // Add current user
+
+                const newProject = {
+                    id: this.projectCounter++,
+                    name,
+                    description,
+                    dueDate,
+                    priority,
+                    status: 'active',
+                    members: selectedMembers,
+                    createdBy: this.currentUser.id,
+                    createdAt: new Date()
+                };
+
+                this.projects.push(newProject);
+                this.populateProjects();
+                document.getElementById('createProjectModal').classList.add('hidden');
+                this.showToast('Project created successfully!', 'success');
+                
+                // Auto-select the new project
+                document.getElementById('projectSelect').value = newProject.id;
+                this.switchProject(newProject.id);
+            }
+
+            switchProject(projectId) {
+                if (!projectId) {
+                    this.showProjectDashboard();
+                    return;
+                }
+
+                this.currentProject = this.projects.find(p => p.id == projectId);
+                if (this.currentProject) {
+                    this.showProjectBoard();
+                    this.updateTeamAvatars();
+                }
+            }
+
+            showProjectDashboard() {
+                document.getElementById('projectDashboard').classList.remove('hidden');
+                document.getElementById('projectBoard').classList.add('hidden');
+                this.currentProject = null;
+            }
+
+            showProjectBoard() {
+                document.getElementById('projectDashboard').classList.add('hidden');
+                document.getElementById('projectBoard').classList.remove('hidden');
+                
+                this.updateProjectInfo();
+                this.renderKanbanBoard();
+            }
+
+            updateProjectInfo() {
+                document.getElementById('projectTitle').textContent = this.currentProject.name;
+                document.getElementById('projectDescription').textContent = this.currentProject.description;
+                document.getElementById('projectDueDate').textContent = new Date(this.currentProject.dueDate).toLocaleDateString();
+                
+                // Update status based on progress
+                const projectTasks = this.tasks.filter(t => t.projectId === this.currentProject.id);
+                const completedTasks = projectTasks.filter(t => t.status === 'done').length;
+                const progress = projectTasks.length > 0 ? (completedTasks / projectTasks.length) * 100 : 0;
+                
+                const statusEl = document.getElementById('projectStatus');
+                const statusTextEl = document.getElementById('projectStatusText');
+                
+                if (progress >= 80) {
+                    statusEl.className = 'w-3 h-3 bg-green-500 rounded-full';
+                    statusTextEl.textContent = 'On Track';
+                } else if (progress >= 50) {
+                    statusEl.className = 'w-3 h-3 bg-yellow-500 rounded-full';
+                    statusTextEl.textContent = 'In Progress';
+                } else {
+                    statusEl.className = 'w-3 h-3 bg-red-500 rounded-full';
+                    statusTextEl.textContent = 'Behind Schedule';
+                }
+            }
+
+            renderKanbanBoard() {
+                const board = document.getElementById('kanbanBoard');
+                const columns = [
+                    { id: 'todo', title: 'To Do', bgColor: 'bg-gray-50' },
+                    { id: 'progress', title: 'In Progress', bgColor: 'bg-blue-50' },
+                    { id: 'review', title: 'Review', bgColor: 'bg-yellow-50' },
+                    { id: 'done', title: 'Done', bgColor: 'bg-green-50' }
+                ];
+
+                board.innerHTML = '';
+
+                columns.forEach(column => {
+                    const columnTasks = this.tasks.filter(t => 
+                        t.projectId === this.currentProject.id && t.status === column.id
+                    );
+
+                    const columnEl = document.createElement('div');
+                    columnEl.className = 'bg-white rounded-xl shadow-sm border';
+                    columnEl.innerHTML = `
+                        <div class="p-4 border-b ${column.bgColor} rounded-t-xl">
+                            <div class="flex items-center justify-between">
+                                <h3 class="font-semibold text-gray-900">${column.title}</h3>
+                                <div class="flex items-center space-x-2">
+                                    <span class="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded-full">${columnTasks.length}</span>
+                                    <button class="text-gray-400 hover:text-gray-600 add-task-btn" data-column="${column.id}">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-4 space-y-3 min-h-96 task-column" data-column="${column.id}">
+                            ${columnTasks.map(task => this.renderTaskCard(task)).join('')}
+                        </div>
+                    `;
+
+                    board.appendChild(columnEl);
+                });
+
+                this.initializeDragAndDrop();
+                this.setupTaskButtons();
+            }
+
+            renderTaskCard(task) {
+                const assignee = this.users.find(u => u.id === task.assigneeId);
+                const priorityColors = {
+                    high: 'priority-high bg-red-100 text-red-800',
+                    medium: 'priority-medium bg-yellow-100 text-yellow-800',
+                    low: 'priority-low bg-green-100 text-green-800'
+                };
+
+                const formattedDate = task.dueDate ? 
+                    new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 
+                    'No date';
+
+                const taskComments = this.comments.filter(c => c.taskId === task.id);
+                const progressBar = task.progress ? `
+                    <div class="w-full bg-gray-200 rounded-full h-2 mb-3">
+                        <div class="bg-blue-600 h-2 rounded-full" style="width: ${task.progress}%"></div>
+                    </div>
+                ` : '';
+
+                return `
+                    <div class="task-card bg-white border rounded-lg p-4 cursor-move ${task.priority === 'high' ? 'priority-high' : task.priority === 'medium' ? 'priority-medium' : 'priority-low'}" 
+                         draggable="true" data-task-id="${task.id}">
+                        <div class="flex items-start justify-between mb-2">
+                            <h4 class="font-medium text-gray-900 text-sm">${task.title}</h4>
+                            <span class="${priorityColors[task.priority]} text-xs px-2 py-1 rounded-full">
+                                ${task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+                            </span>
+                        </div>
+                        <p class="text-gray-600 text-xs mb-3">${task.description}</p>
+                        ${progressBar}
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-2">
+                                <img class="w-6 h-6 rounded-full" src="${assignee.avatar}" alt="${assignee.name}">
+                                <span class="text-xs text-gray-500">${formattedDate}</span>
+                            </div>
+                            <div class="flex items-center space-x-1">
+                                ${task.status === 'done' ? 
+                                    '<svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>' :
+                                    `<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                                    </svg>
+                                    <span class="text-xs text-gray-500">${taskComments.length}</span>`
+                                }
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            setupTaskButtons() {
+                // Add task buttons
+                document.querySelectorAll('.add-task-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        this.showNewTaskModal(btn.dataset.column);
+                    });
+                });
+
+                // Task click handlers
+                document.querySelectorAll('.task-card').forEach(card => {
+                    card.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        this.openTaskModal(parseInt(card.dataset.taskId));
+                    });
+                });
+            }
+
+            initializeDragAndDrop() {
+                const taskCards = document.querySelectorAll('.task-card');
+                const columns = document.querySelectorAll('.task-column');
+
+                taskCards.forEach(card => {
+                    card.addEventListener('dragstart', (e) => this.handleDragStart(e, card));
+                    card.addEventListener('dragend', (e) => this.handleDragEnd(e, card));
+                });
+
+                columns.forEach(column => {
+                    column.addEventListener('dragover', (e) => this.handleDragOver(e));
+                    column.addEventListener('drop', (e) => this.handleDrop(e, column));
+                    column.addEventListener('dragenter', (e) => this.handleDragEnter(e, column));
+                    column.addEventListener('dragleave', (e) => this.handleDragLeave(e, column));
+                });
+            }
+
+            handleDragStart(e, card) {
+                this.draggedTask = parseInt(card.dataset.taskId);
+                card.style.opacity = '0.5';
+            }
+
+            handleDragEnd(e, card) {
+                card.style.opacity = '1';
+                this.draggedTask = null;
+            }
+
+            handleDragOver(e) {
+                e.preventDefault();
+            }
+
+            handleDragEnter(e, column) {
+                e.preventDefault();
+                column.classList.add('drag-over');
+            }
+
+            handleDragLeave(e, column) {
+                column.classList.remove('drag-over');
+            }
+
+            handleDrop(e, column) {
+                e.preventDefault();
+                column.classList.remove('drag-over');
+                
+                if (this.draggedTask) {
+                    const task = this.tasks.find(t => t.id === this.draggedTask);
+                    const newStatus = column.dataset.column;
+                    
+                    if (task && task.status !== newStatus) {
+                        task.status = newStatus;
+                        if (newStatus === 'done') {
+                            task.completedAt = new Date();
+                        }
+                        
+                        this.renderKanbanBoard();
+                        this.showToast('Task moved successfully!', 'success');
+                        this.addNotification(`Task "${task.title}" moved to ${newStatus}`, 'task_moved');
+                        this.simulateRealTimeUpdate('task_moved', task);
+                    }
+                }
+            }
+
+            // Task management methods
+            showNewTaskModal(column) {
+                document.getElementById('newTaskModal').classList.remove('hidden');
+                document.getElementById('newTaskModal').dataset.column = column;
+                this.populateAssigneeOptions('newTaskAssignee');
+            }
+
+            populateAssigneeOptions(selectId) {
+                const select = document.getElementById(selectId);
+                select.innerHTML = '';
+                
+                const projectMembers = this.users.filter(u => 
+                    this.currentProject.members.includes(u.id)
+                );
+
+                projectMembers.forEach(user => {
+                    const option = document.createElement('option');
+                    option.value = user.id;
+                    option.textContent = user.name;
+                    select.appendChild(option);
+                });
+            }
+
+            handleCreateTask(e) {
+                e.preventDefault();
+                const title = document.getElementById('newTaskTitle').value;
+                const description = document.getElementById('newTaskDescription').value;
+                const assigneeId = parseInt(document.getElementById('newTaskAssignee').value);
+                const priority = document.getElementById('newTaskPriority').value;
+                const dueDate = document.getElementById('newTaskDueDate').value;
+                const column = document.getElementById('newTaskModal').dataset.column;
+
+                if (!title.trim()) {
+                    this.showToast('Please enter a task title', 'error');
+                    return;
+                }
+
+                const newTask = {
+                    id: this.taskCounter++,
+                    title,
+                    description,
+                    projectId: this.currentProject.id,
+                    assigneeId,
+                    priority,
+                    status: column,
+                    dueDate,
+                    createdBy: this.currentUser.id,
+                    createdAt: new Date()
+                };
+
+                this.tasks.push(newTask);
+                this.renderKanbanBoard();
+                document.getElementById('newTaskModal').classList.add('hidden');
+                this.clearTaskForm();
+                this.showToast('Task created successfully!', 'success');
+                this.addNotification(`New task "${title}" created`, 'task_created');
+                this.simulateRealTimeUpdate('task_created', newTask);
+            }
+
+            clearTaskForm() {
+                document.getElementById('newTaskTitle').value = '';
+                document.getElementById('newTaskDescription').value = '';
+                document.getElementById('newTaskDueDate').value = '';
+            }
+
+            openTaskModal(taskId) {
+                const task = this.tasks.find(t => t.id === taskId);
+                if (!task) return;
+
+                document.getElementById('taskModal').classList.remove('hidden');
+                document.getElementById('modalTaskTitle').textContent = task.title;
+                document.getElementById('taskDescription').value = task.description;
+                document.getElementById('taskDueDate').value = task.dueDate || '';
+                document.getElementById('taskPriority').value = task.priority;
+                
+                this.populateAssigneeOptions('taskAssignee');
+                document.getElementById('taskAssignee').value = task.assigneeId;
+                
+                this.currentTaskId = taskId;
+                this.loadTaskComments(taskId);
+            }
+
+            loadTaskComments(taskId) {
+                const commentsList = document.getElementById('commentsList');
+                const taskComments = this.comments.filter(c => c.taskId === taskId);
+                
+                commentsList.innerHTML = taskComments.map(comment => {
+                    const user = this.users.find(u => u.id === comment.userId);
+                    const timeAgo = this.getTimeAgo(comment.createdAt);
+                    
+                    return `
+                        <div class="flex space-x-3 fade-in">
+                            <img class="w-8 h-8 rounded-full" src="${user.avatar}" alt="${user.name}">
+                            <div class="flex-1">
+                                <div class="bg-gray-50 rounded-lg p-3">
+                                    <div class="flex items-center space-x-2 mb-1">
+                                        <span class="font-medium text-sm text-gray-900">${user.name}</span>
+                                        <span class="text-xs text-gray-500">${timeAgo}</span>
+                                    </div>
+                                    <p class="text-sm text-gray-700">${comment.content}</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            addComment() {
+                const commentText = document.getElementById('newComment').value.trim();
+                if (!commentText) return;
+
+                const newComment = {
+                    id: this.commentCounter++,
+                    taskId: this.currentTaskId,
+                    userId: this.currentUser.id,
+                    content: commentText,
+                    createdAt: new Date()
+                };
+
+                this.comments.push(newComment);
+                this.loadTaskComments(this.currentTaskId);
+                document.getElementById('newComment').value = '';
+                this.showToast('Comment added!', 'success');
+                
+                const task = this.tasks.find(t => t.id === this.currentTaskId);
+                this.addNotification(`New comment on "${task.title}"`, 'comment_added');
+                this.simulateRealTimeUpdate('comment_added', { task, comment: newComment });
+            }
+
+            saveTaskChanges() {
+                const task = this.tasks.find(t => t.id === this.currentTaskId);
+                if (!task) return;
+
+                task.description = document.getElementById('taskDescription').value;
+                task.assigneeId = parseInt(document.getElementById('taskAssignee').value);
+                task.priority = document.getElementById('taskPriority').value;
+                task.dueDate = document.getElementById('taskDueDate').value;
+
+                this.renderKanbanBoard();
+                document.getElementById('taskModal').classList.add('hidden');
+                this.showToast('Task updated successfully!', 'success');
+                this.addNotification(`Task "${task.title}" updated`, 'task_updated');
+            }
+
+            deleteTask() {
+                const taskIndex = this.tasks.findIndex(t => t.id === this.currentTaskId);
+                if (taskIndex === -1) return;
+
+                const task = this.tasks[taskIndex];
+                this.tasks.splice(taskIndex, 1);
+                
+                // Remove associated comments
+                this.comments = this.comments.filter(c => c.taskId !== this.currentTaskId);
+                
+                this.renderKanbanBoard();
+                document.getElementById('taskModal').classList.add('hidden');
+                this.showToast('Task deleted successfully!', 'success');
+                this.addNotification(`Task "${task.title}" deleted`, 'task_deleted');
+            }
+
+            // Utility methods
+            updateTeamAvatars() {
+                const container = document.getElementById('teamAvatars');
+                container.innerHTML = '';
+
+                if (this.currentProject) {
+                    const members = this.users.filter(u => this.currentProject.members.includes(u.id));
+                    members.slice(0, 3).forEach(member => {
+                        const img = document.createElement('img');
+                        img.className = 'w-8 h-8 rounded-full border-2 border-white';
+                        img.src = member.avatar;
+                        img.alt = member.name;
+                        img.title = member.name;
+                        container.appendChild(img);
+                    });
+                }
+            }
+
+            getTimeAgo(date) {
+                const now = new Date();
+                const diff = now - date;
+                const minutes = Math.floor(diff / 60000);
+                const hours = Math.floor(diff / 3600000);
+                const days = Math.floor(diff / 86400000);
+
+                if (minutes < 1) return 'Just now';
+                if (minutes < 60) return `${minutes}m ago`;
+                if (hours < 24) return `${hours}h ago`;
+                return `${days}d ago`;
+            }
+
+            toggleUserMenu() {
+                const menu = document.getElementById('userMenu');
+                menu.classList.toggle('hidden');
+            }
+
+            toggleNotifications() {
+                const panel = document.getElementById('notificationsPanel');
+                panel.classList.toggle('hidden');
+                this.renderNotifications();
+            }
+
+            handleOutsideClick(e) {
+                const userMenu = document.getElementById('userMenu');
+                const userMenuBtn = document.getElementById('userMenuBtn');
+                const notificationsPanel = document.getElementById('notificationsPanel');
+                const notificationBtn = document.getElementById('notificationBtn');
+
+                if (!userMenuBtn.contains(e.target)) {
+                    userMenu.classList.add('hidden');
+                }
+
+                if (!notificationBtn.contains(e.target)) {
+                    notificationsPanel.classList.add('hidden');
+                }
+            }
+
+            // Notification system
+            addNotification(message, type) {
+                const notification = {
+                    id: this.notificationCounter++,
+                    message,
+                    type,
+                    userId: this.currentUser.id,
+                    createdAt: new Date(),
+                    read: false
+                };
+
+                this.notifications.unshift(notification);
+                this.updateNotificationBadge();
+            }
+
+            updateNotificationBadge() {
+                const unreadCount = this.notifications.filter(n => !n.read && n.userId === this.currentUser.id).length;
+                const badge = document.getElementById('notificationBadge');
+                
+                if (unreadCount > 0) {
+                    badge.textContent = unreadCount;
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+            }
+
+            renderNotifications() {
+                const container = document.getElementById('notificationsList');
+                const userNotifications = this.notifications.filter(n => n.userId === this.currentUser.id);
+
+                if (userNotifications.length === 0) {
+                    container.innerHTML = '<div class="p-4 text-center text-gray-500 text-sm">No notifications</div>';
+                    return;
+                }
+
+                container.innerHTML = userNotifications.slice(0, 10).map(notification => `
+                    <div class="p-4 hover:bg-gray-50 ${notification.read ? '' : 'bg-blue-50'}">
+                        <div class="flex items-start space-x-3">
+                            <div class="flex-shrink-0">
+                                ${this.getNotificationIcon(notification.type)}
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm text-gray-900">${notification.message}</p>
+                                <p class="text-xs text-gray-500 mt-1">${this.getTimeAgo(notification.createdAt)}</p>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+
+                // Mark notifications as read
+                userNotifications.forEach(n => n.read = true);
+                this.updateNotificationBadge();
+            }
+
+            getNotificationIcon(type) {
+                const icons = {
+                    task_created: '<div class="w-2 h-2 bg-green-500 rounded-full"></div>',
+                    task_updated: '<div class="w-2 h-2 bg-blue-500 rounded-full"></div>',
+                    task_moved: '<div class="w-2 h-2 bg-yellow-500 rounded-full"></div>',
+                    task_deleted: '<div class="w-2 h-2 bg-red-500 rounded-full"></div>',
+                    comment_added: '<div class="w-2 h-2 bg-purple-500 rounded-full"></div>'
+                };
+                return icons[type] || '<div class="w-2 h-2 bg-gray-500 rounded-full"></div>';
+            }
+
+            showToast(message, type = 'info') {
+                const toast = document.createElement('div');
+                toast.className = `notification bg-white border-l-4 ${
+                    type === 'success' ? 'border-green-500' : 
+                    type === 'error' ? 'border-red-500' : 
+                    'border-blue-500'
+                } p-4 rounded-lg shadow-lg max-w-sm`;
+                
+                toast.innerHTML = `
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            ${type === 'success' ? 
+                                '<svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>' :
+                                type === 'error' ?
+                                '<svg class="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>' :
+                                '<svg class="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>'
+                            }
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm font-medium text-gray-900">${message}</p>
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('toastContainer').appendChild(toast);
+
+                setTimeout(() => {
+                    toast.remove();
+                }, 3000);
+            }
+
+            // Simulate real-time updates (WebSocket simulation)
+            simulateRealTimeUpdates() {
+                setInterval(() => {
+                    // Simulate random team activity
+                    if (Math.random() < 0.1 && this.currentProject) { // 10% chance every 5 seconds
+                        this.simulateTeamActivity();
+                    }
+                }, 5000);
+            }
+
+            simulateTeamActivity() {
+                const activities = [
+                    'Someone joined the project',
+                    'A task was updated by a team member',
+                    'New comment added to a task',
+                    'Task priority changed'
+                ];
+
+                const activity = activities[Math.floor(Math.random() * activities.length)];
+                this.addNotification(activity, 'team_activity');
+            }
+
+            simulateRealTimeUpdate(action, data) {
+                // Simulate WebSocket broadcast to other users
+                console.log('Real-time update:', action, data);
+                
+                // In a real application, this would send data to WebSocket server
+                // which would then broadcast to all connected clients
+            }
+        }
+
+        // Initialize the application
+        const app = new ProjectFlowApp();
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96f757b56291897b',t:'MTc1NTI0Njc1OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
